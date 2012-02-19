@@ -14,14 +14,14 @@
  * }
  *
  * // Create a configuration
- * Configuration conf;
+ * FluentLogger.Configuration conf;
  * conf.host = "backend1";
  *
  * // Create a logger with tag prefix and configuration
  * auto logger = new FluentLogger("app", conf);
  *
  * // Write Event object with "test" tag to Fluentd 
- * logger.write("test", Event());
+ * logger.post("test", Event());
  * // Fluentd accepts {"text":"This is D","id":0} at "app.test" input
  * -----
  *
@@ -38,20 +38,10 @@ module fluent.logger;
 import std.array;
 import std.datetime : Clock, SysTime;
 
+debug import std.stdio;  // TODO: replace with std.log
+
 import msgpack;
 import socket;
-
-
-/**
- * FluentLogger configuration
- *
- * TODO: Resolve host
- */
-struct Configuration
-{
-    string host = "127.0.0.1";
-    ushort port = 24224;
-}
 
 
 /**
@@ -59,20 +49,38 @@ struct Configuration
  */
 class FluentLogger
 {
+  public:
+    /**
+     * FluentLogger configuration
+     *
+     * TODO: Resolve host
+     */
+    struct Configuration
+    {
+        string host = "localhost";
+        ushort port = 24224;
+        // size_t bufferLimit = 4 * 1024 * 1024;
+    }
+
+
   private:
     immutable string        prefix_;
     immutable Configuration config_;
 
-    //Appender!(ubyte[]) buffer_;
-    Socket!IPEndpoint socket_;
+    //Appender!(ubyte[]) buffer_;  // Appender's qualifiers are broken...
+    ubyte[]            buffer_;  // should have limit?
+    Socket!IPEndpoint  socket_;
+
+    // for reconnection
+    uint    errorNum_;
+    SysTime errorTime_;
+
 
   public:
     this(in string prefix, in Configuration config)
     {
         prefix_ = prefix;
         config_ = config;
-
-        connect();
     }
 
     ~this()
@@ -80,39 +88,131 @@ class FluentLogger
         close();
     }
 
-    void close()
+    @property
+    const(ubyte[]) pendings() const
     {
-        if (socket_ !is null) {
-            socket_.shutdown(SocketShutdown.BOTH);
-            socket_.close();
-            socket_ = null;
+        synchronized {
+            return buffer_;
         }
     }
 
-    void connect()
+    void close()
     {
-        auto address = IPAddress(config_.host);
-        auto family  = address.isIPv4 ? AddressFamily.INET : AddressFamily.INET6;
-        socket_ = new Socket!IPEndpoint(family, SocketType.STREAM, ProtocolType.TCP);
-        socket_.connect(IPEndpoint(address, config_.port));
+        synchronized {
+            if (socket_ !is null) {
+                if (buffer_.length > 0) {
+                    try {
+                        send(buffer_);
+                        buffer_ = null;
+                    } catch (const SocketException e) {
+                        debug { writeln("Failed to flush logs"); }
+                    }
+                }
+
+                socket_.shutdown(SocketShutdown.both);
+                clear(socket_);
+                socket_ = null;
+            }
+        }
     }
 
-    void write(T)(in string tag, auto ref const T record)
+    bool post(T)(in string tag, auto ref const T record)
     {
-        write(tag, Clock.currTime(), record);
+        return post(tag, Clock.currTime(), record);
     }
 
-    void write(T)(in string tag, in SysTime time, auto ref const T record)
+    bool post(T)(in string tag, in SysTime time, auto ref const T record)
     {
         auto completeTag = prefix_.length ? prefix_ ~ "." ~ tag : tag;
-        return send(pack!true(completeTag, time.toUnixTime(), record));
+        return write(pack!true(completeTag, time.toUnixTime(), record));
+    }
+
+    bool write(in ubyte[] data)
+    {
+        synchronized {
+            buffer_ ~= data;
+            if (!canWrite())
+                return false;
+
+            try {
+                send(buffer_);
+                buffer_ = buffer_.ptr[0..0];
+            } catch (SocketException e) {
+                clearSocket();
+                return false;
+            }
+        }
+
+        return true;
     }
 
 
   private:
+    void connect()
+    {
+        auto hints = AddressInfo(AddressInfoFlags.any, AddressFamily.unspec,
+                                 SocketType.stream, ProtocolType.tcp);
+        auto addrInfo = AddressInfo.getByNode(config_.host, null, &hints);
+        if (addrInfo is null)
+            throw new Exception("Failed to resolve host: hsot = " ~ config_.host);
+
+        try {
+            auto addr   = addrInfo[0];
+            auto socket = new Socket!IPEndpoint(addr);
+            socket.connect(IPEndpoint(addr.ipAddress, config_.port));
+
+            socket_    = socket;
+            errorNum_  = 0;
+            errorTime_ = SysTime.init;
+
+            debug { writeln("Connect to: host = ", config_.host, ", port = ", config_.port); }
+        } catch (SocketException e) {
+            clearSocket();
+            errorNum_++;
+            errorTime_ = Clock.currTime();
+
+            throw e;
+        }
+    }
+
     void send(in ubyte[] data)
     {
-        // TODO: Add error handling and buffering
+        if (socket_ is null)
+            connect();
+
         socket_.send(data);
+
+        debug { writeln("Sent: ", data.length, " bytes"); }
+    }
+
+    void clearSocket()
+    {
+        // reconnection at send method.
+        if (socket_ !is null) {
+            try {
+                socket_.close();
+            } catch (SocketException e) {
+                // ignore close exception.
+            }
+        }
+        socket_ = null;
+    }
+
+    enum ReconnectionWaitingMax = 60u;
+
+    bool canWrite()
+    {
+        // prevent useless reconnection
+        if (errorTime_ != SysTime.init) {
+            // TODO: more complex?
+            uint secs = 2 ^^ errorNum_;
+            if (secs > ReconnectionWaitingMax)
+                secs = ReconnectionWaitingMax;
+
+            if ((Clock.currTime() - errorTime_).get!"seconds"() < secs)
+                return false;
+        }
+
+        return true;
     }
 }
