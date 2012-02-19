@@ -15,22 +15,24 @@ struct Event
 import fluent.logger;
 
 // Create a configuration
-Configuration conf;
+FluentLogger.Configuration conf;
 
 // Create a logger with tag prefix and configuration
 auto logger = new FluentLogger("app", conf);
 
 // Write Event object with "test" tag to Fluentd 
-logger.write("test", Event());
+logger.post("test", Event());
 ```
 
 In this result, Fluentd accepts ```{"text":"This is D","id":0}``` at "app.test" input source.
 
+### Sharing logger
+
+Currently, FluentLogger is not marked as a shared.
+So, if you share a logger object accross threads, please use __gshared.
+
 ## TODO
 
-* Add error handling
-* Add buffering
-* Make logger thread safety
 * std.log support after Phobos accepts std.log
 * Add other modules
 
