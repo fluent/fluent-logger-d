@@ -284,12 +284,12 @@ shared static ~this()
  */
 enum AddressFamily : int
 {
-    UNSPEC    = AF_UNSPEC,     ///
-    UNIX      = AF_UNIX,       /// local communication
-    INET      = AF_INET,       /// internet protocol version 4
-    IPX       = AF_IPX,        /// novell IPX
-    APPLETALK = AF_APPLETALK,  /// appletalk
-    INET6     = AF_INET6,      /// internet protocol version 6
+    unspec    = AF_UNSPEC,     ///
+    unix      = AF_UNIX,       /// local communication
+    inet      = AF_INET,       /// internet protocol version 4
+    ipx       = AF_IPX,        /// novell IPX
+    appleTalk = AF_APPLETALK,  /// appletalk
+    inet6     = AF_INET6,      /// internet protocol version 6
 }
 
 
@@ -298,12 +298,12 @@ enum AddressFamily : int
  */
 enum SocketType : int
 {
-    ANY,                         /// emulates the Posix behavior of null
-    STREAM    = SOCK_STREAM,     /// sequenced, reliable, two-way communication-based byte streams
-    DGRAM     = SOCK_DGRAM,      /// connectionless, unreliable datagrams with a fixed maximum length; data may be lost or arrive out of order
-    RAW       = SOCK_RAW,        /// raw protocol access
-    RDM       = SOCK_RDM,        /// reliably-delivered message datagrams
-    SEQPACKET = SOCK_SEQPACKET,  /// sequenced, reliable, two-way connection-based datagrams with a fixed maximum length
+    any,                         /// emulates the Posix behavior of null
+    stream    = SOCK_STREAM,     /// sequenced, reliable, two-way communication-based byte streams
+    dgram     = SOCK_DGRAM,      /// connectionless, unreliable datagrams with a fixed maximum length; data may be lost or arrive out of order
+    raw       = SOCK_RAW,        /// raw protocol access
+    rdm       = SOCK_RDM,        /// reliably-delivered message datagrams
+    seqPacket = SOCK_SEQPACKET,  /// sequenced, reliable, two-way connection-based datagrams with a fixed maximum length
 }
 
 
@@ -312,16 +312,16 @@ enum SocketType : int
  */
 enum ProtocolType : int
 {
-    ANY,                  /// emulates the Posix behavior of null
-    IP   = IPPROTO_IP,    /// internet protocol version 4
-    ICMP = IPPROTO_ICMP,  /// internet control message protocol
-    IGMP = IPPROTO_IGMP,  /// internet group management protocol
-    GGP  = IPPROTO_GGP,   /// gateway to gateway protocol
-    TCP  = IPPROTO_TCP,   /// transmission control protocol
-    PUP  = IPPROTO_PUP,   /// PARC universal packet protocol
-    UDP  = IPPROTO_UDP,   /// user datagram protocol
-    IDP  = IPPROTO_IDP,   /// Xerox NS protocol
-    IPV6 = IPPROTO_IPV6,  /// internet protocol version 6
+    any,                  /// emulates the Posix behavior of null
+    ip   = IPPROTO_IP,    /// internet protocol version 4
+    icmp = IPPROTO_ICMP,  /// internet control message protocol
+    igmp = IPPROTO_IGMP,  /// internet group management protocol
+    ggp  = IPPROTO_GGP,   /// gateway to gateway protocol
+    tcp  = IPPROTO_TCP,   /// transmission control protocol
+    pup  = IPPROTO_PUP,   /// PARC universal packet protocol
+    udp  = IPPROTO_UDP,   /// user datagram protocol
+    idp  = IPPROTO_IDP,   /// Xerox NS protocol
+    ipV6 = IPPROTO_IPV6,  /// internet protocol version 6
 }
 
 
@@ -331,13 +331,13 @@ enum ProtocolType : int
 enum AddressInfoFlags : int
 {
     // Common options
-    ANY,                       /// emulates the Posix behavior of null
-    PASSIVE     = 0x00000001,  /// AI_PASSIVE     : gets address for bind() 
-    CANONNAME   = 0x00000002,  /// AI_CANONNAME   : returns ai_canonname
-    NUMERICHOST = 0x00000004,  /// AI_NUMERICHOST : prevent host-name resolution
+    any,                       /// emulates the Posix behavior of null
+    passive     = 0x00000001,  /// AI_PASSIVE     : gets address for bind()
+    canonName   = 0x00000002,  /// AI_CANONNAME   : returns ai_canonname
+    numericHost = 0x00000004,  /// AI_NUMERICHOST : prevent host-name resolution
 
     // std.c.windows.winsock doesn't define following options
-    // NUMERICSERV = 0x00000008,  /// AI_NUMERICSERV : prevent service-name resolution
+    // numericServ = 0x00000008,  /// AI_NUMERICSERV : prevent service-name resolution
     // AI_ALL, AI_V4MAPPED, AI_ADDRCONFIG
 }
 
@@ -354,7 +354,7 @@ class AddressException : Exception
 /**
  * AddressInfo is a class for resolving Address.
  */
-class AddressInfo
+struct AddressInfo
 {
     AddressInfoFlags flags;
     AddressFamily    family;
@@ -373,8 +373,8 @@ class AddressInfo
      * for hint.
      */
     @safe
-    this(AddressInfoFlags ai_flags = AddressInfoFlags.ANY, AddressFamily ai_family = AddressFamily.UNSPEC,
-         SocketType ai_socktype = SocketType.ANY, ProtocolType ai_protocol = ProtocolType.ANY)
+    this(AddressInfoFlags ai_flags = AddressInfoFlags.any, AddressFamily ai_family = AddressFamily.unspec,
+         SocketType ai_socktype = SocketType.any, ProtocolType ai_protocol = ProtocolType.any)
     {
         flags        = ai_flags;
         family       = ai_family;
@@ -385,8 +385,8 @@ class AddressInfo
 
     /// ditto
     @safe
-    this(AddressFamily ai_family, SocketType ai_socktype = SocketType.ANY,
-         ProtocolType ai_protocol = ProtocolType.ANY, AddressInfoFlags ai_flags = AddressInfoFlags.ANY)
+    this(AddressFamily ai_family, SocketType ai_socktype = SocketType.any,
+         ProtocolType ai_protocol = ProtocolType.any, AddressInfoFlags ai_flags = AddressInfoFlags.any)
     {
         this(ai_flags, ai_family, ai_socktype, ai_protocol);
     }
@@ -394,8 +394,8 @@ class AddressInfo
 
     /// ditto
     @safe
-    this(SocketType ai_socktype, ProtocolType ai_protocol = ProtocolType.ANY,
-         AddressInfoFlags ai_flags = AddressInfoFlags.ANY, AddressFamily ai_family = AddressFamily.UNSPEC)
+    this(SocketType ai_socktype, ProtocolType ai_protocol = ProtocolType.any,
+         AddressInfoFlags ai_flags = AddressInfoFlags.any, AddressFamily ai_family = AddressFamily.unspec)
     {
         this(ai_flags, ai_family, ai_socktype, ai_protocol);
     }
@@ -403,8 +403,8 @@ class AddressInfo
 
     /// ditto
     @safe
-    this(ProtocolType ai_protocol, AddressInfoFlags ai_flags = AddressInfoFlags.ANY,
-         AddressFamily ai_family = AddressFamily.UNSPEC, SocketType ai_socktype = SocketType.ANY)
+    this(ProtocolType ai_protocol, AddressInfoFlags ai_flags = AddressInfoFlags.any,
+         AddressFamily ai_family = AddressFamily.unspec, SocketType ai_socktype = SocketType.any)
     {
         this(ai_flags, ai_family, ai_socktype, ai_protocol);
     }
@@ -442,9 +442,9 @@ class AddressInfo
     IPAddress ipAddress() const
     {
         switch (family) {
-        case AddressFamily.INET:
+        case AddressFamily.inet:
             return IPAddress(IPv4Address(ntohl((*cast(sockaddr_in*)&storage).sin_addr.s_addr)));
-        case AddressFamily.INET6:
+        case AddressFamily.inet6:
             return IPAddress(IPv6Address((*cast(sockaddr_in6*)&storage).sin6_addr.s6_addr,
                                          (*cast(sockaddr_in6*)&storage).sin6_scope_id));
         default:
@@ -461,9 +461,9 @@ class AddressInfo
     ushort port() const
     {
         switch (family) {
-        case AddressFamily.INET:
+        case AddressFamily.inet:
             return ntohs((*cast(sockaddr_in*)&storage).sin_port);
-        case AddressFamily.INET6:
+        case AddressFamily.inet6:
             return ntohs((*cast(sockaddr_in6*)&storage).sin6_port);
         default:
             throw new AddressException(to!string(family) ~ " is not a IP address");
@@ -479,7 +479,7 @@ class AddressInfo
     LocalAddress localAddress() const
     {
         switch (family) {
-        case AddressFamily.UNIX:
+        case AddressFamily.unix:
             return LocalAddress(to!string((*cast(sockaddr_un*)&storage).sun_path.ptr));
         default:
             throw new AddressException(to!string(family) ~ " is not a local address");
@@ -495,7 +495,7 @@ class AddressInfo
     string path()
     {
         switch (family) {
-        case AddressFamily.UNIX:
+        case AddressFamily.unix:
             return to!string((*cast(sockaddr_un*)&storage).sun_path.ptr);
         default:
             throw new AddressException(to!string(family) ~ " is not a local address");
@@ -509,7 +509,7 @@ class AddressInfo
      * Returns:
      *  null if unable to resolve.
      */
-    static AddressInfo[] getByNode(string node, string service = null, AddressInfo hint = null)
+    static AddressInfo[] getByNode(string node, string service = null, AddressInfo* hint = null)
     in
     {
         assert(!(node is null && service is null));
@@ -519,16 +519,16 @@ class AddressInfo
         /*
          * Supports AF_UNIX
          */
-        AddressInfo createLocalAddress(AddressInfo info)
+        AddressInfo createLocalAddress(AddressInfo* info)
         in
         {
             assert(node, "UNIX family requires node");
         }
         body
         {
-            auto sun  = sockaddr_un(cast(short)AddressFamily.UNIX);            
-            auto addr = new AddressInfo(AddressFamily.UNIX, (info.socketType == SocketType.DGRAM)
-                                        ? SocketType.DGRAM : SocketType.STREAM);
+            auto sun  = sockaddr_un(cast(short)AddressFamily.unix);
+            auto addr = AddressInfo(AddressFamily.unix, (info.socketType == SocketType.dgram)
+                                    ? SocketType.dgram : SocketType.stream);
 
             sun.sun_path[0..node.length]     = node;
             sun.sun_path[node.length]        = '\0';
@@ -544,7 +544,7 @@ class AddressInfo
 
         if (hint !is null) {
             // Local address support
-            if (hint.family == AddressFamily.UNIX)
+            if (hint.family == AddressFamily.unix)
                 return [createLocalAddress(hint)];
 
             hints = cast(addrinfo*)alloca(addrinfo.sizeof);
@@ -565,7 +565,7 @@ class AddressInfo
         AddressInfo[] addresses;
 
         for (auto p = res; p; p = p.ai_next)
-            addresses ~= new AddressInfo(p);
+            addresses ~= AddressInfo(p);
 
         freeaddrinfo_func(res);
 
@@ -574,7 +574,7 @@ class AddressInfo
 
 
     /// ditto
-    static AddressInfo[] getByService(string service, string node = null, AddressInfo hints = null)
+    static AddressInfo[] getByService(string service, string node = null, AddressInfo* hints = null)
     {
         return getByService(node, service, hints);
     }
@@ -586,10 +586,10 @@ unittest
     auto ais = AddressInfo.getByNode("localhost");
     assert(ais.length, "getaddrinfo failure");
 
-    auto ai = AddressInfo.getByNode("/tmp/sock", null, new AddressInfo(AddressFamily.UNIX))[0];
-    assert(ai);
+    auto addrInfo = AddressInfo(AddressFamily.unix);
+    auto ai = AddressInfo.getByNode("/tmp/sock", null, &addrInfo)[0];
     assert(ai.path       == "/tmp/sock");
-    assert(ai.socketType == SocketType.STREAM);
+    assert(ai.socketType == SocketType.stream);
 }
 
 
@@ -679,7 +679,7 @@ struct IPAddress
     @property @safe
     nothrow AddressFamily family() const
     {
-        return type_ == Type.v4 ? AddressFamily.INET : AddressFamily.INET6;
+        return type_ == Type.v4 ? AddressFamily.inet : AddressFamily.inet6;
     }
 
 
@@ -771,7 +771,7 @@ unittest
         auto ip = IPAddress(addr);
         assert(ip.isIPv4);
         assert(!ip.isIPv6);
-        assert(ip.family   == AddressFamily.INET);
+        assert(ip.family   == AddressFamily.inet);
         assert(ip.toIPv4() == IPv4Address(addr));
 
         try {
@@ -786,7 +786,7 @@ unittest
         auto ip = IPAddress(addr);
         assert(!ip.isIPv4);
         assert(ip.isIPv6);
-        assert(ip.family   == AddressFamily.INET6);
+        assert(ip.family   == AddressFamily.inet6);
         assert(ip.toIPv6() == IPv6Address(addr));
 
         try {
@@ -1170,7 +1170,7 @@ struct LocalAddress
     @property @safe
     AddressFamily family() const
     {
-        return AddressFamily.UNIX;
+        return AddressFamily.unix;
     }
 
 
@@ -1369,7 +1369,7 @@ struct IPEndpoint
     @property @safe
     AddressFamily addressFamily() const
     {
-        return isIPv4 ? AddressFamily.INET : AddressFamily.INET6;
+        return isIPv4 ? AddressFamily.inet : AddressFamily.inet6;
     }
 
 
@@ -1416,14 +1416,14 @@ struct IPEndpoint
 unittest
 {
     auto endpoint = IPEndpoint(IPAddress("127.0.0.1"), 80);
-    assert(endpoint.address.family == AddressFamily.INET);
+    assert(endpoint.address.family == AddressFamily.inet);
     assert(endpoint.port           == 80);
     assert(endpoint.nameLen        == sockaddr_in.sizeof);
     assert(endpoint.address        == IPAddress("127.0.0.1"));
     assert(endpoint.toString()     == "127.0.0.1:80");
 
     endpoint.address = IPAddress("::%10");
-    assert(endpoint.address.family == AddressFamily.INET6);
+    assert(endpoint.address.family == AddressFamily.inet6);
     assert(endpoint.nameLen        == sockaddr_in6.sizeof);
     assert(endpoint.toString()     == "[::%10]:80");
 }
@@ -1544,7 +1544,7 @@ struct LocalEndpoint
     @property @safe
     AddressFamily addressFamily() const
     {
-        return AddressFamily.UNIX;
+        return AddressFamily.unix;
     }
 
 
@@ -1576,7 +1576,7 @@ struct LocalEndpoint
 unittest
 {
     auto endpoint = LocalEndpoint(LocalAddress("path"));
-    assert(endpoint.address.family == AddressFamily.UNIX);
+    assert(endpoint.address.family == AddressFamily.unix);
     assert(endpoint.path           == "path");
     assert(endpoint.address        == LocalAddress("path"));
 
@@ -1672,9 +1672,9 @@ extern(System) struct Linger
  */
 enum SocketShutdown : int
 {
-    RECEIVE = SD_RECEIVE,  /// socket receives are disallowed
-    SEND    = SD_SEND,     /// socket sends are disallowed
-    BOTH    = SD_BOTH,     /// both RECEIVE and SEND
+    receive = SD_RECEIVE,  /// socket receives are disallowed
+    send    = SD_SEND,     /// socket sends are disallowed
+    both    = SD_BOTH,     /// both receive and send
 }
 
 version (OSX)
@@ -1687,11 +1687,11 @@ version (OSX)
  */
 enum SocketFlags : int
 {
-    NONE      = 0,              /// no flags specified
-    OOB       = MSG_OOB,        /// out-of-band stream data
-    PEEK      = MSG_PEEK,       /// peek at incoming data without removing it from the queue, only for receiving
-    DONTROUTE = MSG_DONTROUTE,  /// data should not be subject to routing; this flag may be ignored. Only for sending
-    NOSIGNAL  = MSG_NOSIGNAL,   /// don't send SIGPIPE signal on socket write error and instead return EPIPE
+    none      = 0,              /// no flags specified
+    oob       = MSG_OOB,        /// out-of-band stream data
+    peek      = MSG_PEEK,       /// peek at incoming data without removing it from the queue, only for receiving
+    dontRoute = MSG_DONTROUTE,  /// data should not be subject to routing; this flag may be ignored. Only for sending
+    noSignal  = MSG_NOSIGNAL,   /// don't send SIGPIPE signal on socket write error and instead return EPIPE
 }
 
 
@@ -1700,16 +1700,16 @@ enum SocketFlags : int
  */
 enum SocketOptionLevel: int
 {
-    SOCKET = SOL_SOCKET,         /// socket level
-    IP     = ProtocolType.IP,    /// internet protocol version 4 level
-    ICMP   = ProtocolType.ICMP,  ///
-    IGMP   = ProtocolType.IGMP,  ///
-    GGP    = ProtocolType.GGP,   ///
-    TCP    = ProtocolType.TCP,   /// transmission control protocol level
-    PUP    = ProtocolType.PUP,   ///
-    UDP    = ProtocolType.UDP,   /// user datagram protocol level
-    IDP    = ProtocolType.IDP,   ///
-    IPV6   = ProtocolType.IPV6,  /// internet protocol version 6 level
+    socket = SOL_SOCKET,         /// socket level
+    IP     = ProtocolType.ip,    /// internet protocol version 4 level
+    icmp   = ProtocolType.icmp,  ///
+    igmp   = ProtocolType.igmp,  ///
+    ggp    = ProtocolType.ggp,   ///
+    tcp    = ProtocolType.tcp,   /// transmission control protocol level
+    pup    = ProtocolType.pup,   ///
+    udp    = ProtocolType.udp,   /// user datagram protocol level
+    idp    = ProtocolType.idp,   ///
+    ipV6   = ProtocolType.ipV6,  /// internet protocol version 6 level
 }
 
 
@@ -1718,25 +1718,25 @@ enum SocketOptionLevel: int
  */
 enum SocketOption: int
 {
-    DEBUG     = SO_DEBUG,      /// record debugging information
-    BROADCAST = SO_BROADCAST,  /// allow transmission of broadcast messages
-    REUSEADDR = SO_REUSEADDR,  /// allow local reuse of address
-    LINGER    = SO_LINGER,     /// Linger on close if unsent data is present
-    OOBINLINE = SO_OOBINLINE,  /// receive out-of-band data in band
-    SNDBUF    = SO_SNDBUF,     /// send buffer size
-    RCVBUF    = SO_RCVBUF,     /// receive buffer size
-    DONTROUTE = SO_DONTROUTE,  /// do not route
-    //TYPE      = SO_TYPE,       /// current socket type
+    debug_    = SO_DEBUG,      /// record debugging information
+    broadcast = SO_BROADCAST,  /// allow transmission of broadcast messages
+    reuseAddr = SO_REUSEADDR,  /// allow local reuse of address
+    linger    = SO_LINGER,     /// Linger on close if unsent data is present
+    oobInline = SO_OOBINLINE,  /// receive out-of-band data in band
+    sndBuf    = SO_SNDBUF,     /// send buffer size
+    rcvBub    = SO_RCVBUF,     /// receive buffer size
+    dontRoute = SO_DONTROUTE,  /// do not route
+    //type      = SO_TYPE,       /// current socket type
 
     // SocketOptionLevel.TCP:
-    TCP_NODELAY = .TCP_NODELAY,  /// disable the Nagle algorithm for send coalescing
+    tcpNoDelay = .TCP_NODELAY,  /// disable the Nagle algorithm for send coalescing
 
-    // SocketOptionLevel.IPV6:
-    IPV6_UNICAST_HOPS   = .IPV6_UNICAST_HOPS,    ///
-    IPV6_MULTICAST_IF   = .IPV6_MULTICAST_IF,    ///
-    IPV6_MULTICAST_LOOP = .IPV6_MULTICAST_LOOP,  ///
-    IPV6_JOIN_GROUP     = .IPV6_JOIN_GROUP,      ///
-    IPV6_LEAVE_GROUP    = .IPV6_LEAVE_GROUP,     ///
+    // SocketOptionLevel.ipV6:
+    ipV6UnicastHops   = .IPV6_UNICAST_HOPS,    ///
+    ipV6MulticastIf   = .IPV6_MULTICAST_IF,    ///
+    ipV6MulticastLoop = .IPV6_MULTICAST_LOOP,  ///
+    ipV6JoinGroup     = .IPV6_JOIN_GROUP,      ///
+    ipV6LeaveGroup    = .IPV6_LEAVE_GROUP,     ///
 }
 
 
@@ -1757,8 +1757,8 @@ struct SocketOption {}
  * alias Socket!IPEndpoint IPSocket;
  *
  * auto site  = "www.digitalmars.com";
- * auto hints = new AddressInfo(AddressInfoFlags.ANY, AddressFamily.INET,
- *                              SocketType.STREAM, ProtocolType.TCP);
+ * auto hints = AddressInfo(AddressInfoFlags.any, AddressFamily.inet,
+ *                          SocketType.stream, ProtocolType.tcp);
  *
  * if (auto addrInfo = AddressInfo.getByNode(site, "http", hints)) {
  *     auto addr   = addrInfo[0];
@@ -1775,7 +1775,7 @@ struct SocketOption {}
  *
  *     write(result);
  *
- *     socket.shutdown(SocketShutdown.BOTH);
+ *     socket.shutdown(SocketShutdown.both);
  *     socket.close();
  * }
  * -----
@@ -1794,7 +1794,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      * Constructs a blocking socket. If a single protocol type exists to support
      * this socket type within the address family, the ProtocolType may be omitted.
      */
-    this(AddressFamily af, SocketType type, ProtocolType protocol = ProtocolType.ANY)
+    this(AddressFamily af, SocketType type, ProtocolType protocol = ProtocolType.any)
     {
         handle_ = cast(socket_t).socket(af, type, protocol);
         if (handle_ == socket_t.init)
@@ -1807,7 +1807,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
     this(AddressInfo addressInfo)
     in
     {
-        assert(addressInfo, "AddressInfo must be initialized");
+        assert(addressInfo != AddressInfo.init, "AddressInfo must be initialized");
     }
     body
     {
@@ -1887,7 +1887,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
                     goto err;
             }
 
-            return;  // Success.
+            return;
 
           err:
             throw new SocketException("Unable to set socket blocking", lastError());
@@ -2074,9 +2074,9 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      * Note:
      *  This method assumes you connect()ed.
      */
-    long send(const(void)[] buf, SocketFlags flags = SocketFlags.NONE)
+    long send(const(void)[] buf, SocketFlags flags = SocketFlags.none)
     {
-        flags |= SocketFlags.NOSIGNAL;
+        flags |= SocketFlags.noSignal;
 
         version(Windows)
             immutable result = .send(handle_, buf.ptr, to!int(buf.length), cast(int)flags);
@@ -2098,9 +2098,9 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      * Note:
      *  This method assumes you connect()ed.
      */
-    long sendTo(const(void)[] buf, ref const Endpoint to, SocketFlags flags = SocketFlags.NONE)
+    long sendTo(const(void)[] buf, ref const Endpoint to, SocketFlags flags = SocketFlags.none)
     {
-        flags |= SocketFlags.NOSIGNAL;
+        flags |= SocketFlags.noSignal;
 
         version(Windows)
             immutable result = .sendto(handle_, buf.ptr, to!int(buf.length), cast(int)flags, to.name, to.nameLen);
@@ -2115,9 +2115,9 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
 
 
     /// ditto
-    ptrdiff_t sendTo(const(void)[] buf, SocketFlags flags = SocketFlags.NONE)
+    ptrdiff_t sendTo(const(void)[] buf, SocketFlags flags = SocketFlags.none)
     {
-        flags |= SocketFlags.NOSIGNAL;
+        flags |= SocketFlags.noSignal;
 
         version(Windows)
             immutable result = .sendto(handle_, buf.ptr, to!int(buf.length), cast(int)flags, null, 0);
@@ -2144,7 +2144,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      * Note:
      *  This method assumes you connect()ed.
      */
-    ptrdiff_t receive(void[] buf, SocketFlags flags = SocketFlags.NONE)
+    ptrdiff_t receive(void[] buf, SocketFlags flags = SocketFlags.none)
     {
         if (!buf.length) //return 0 and don't think the connection closed
             return 0;
@@ -2174,7 +2174,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      * Note:
      *  This method assumes you connect()ed.
      */
-    ptrdiff_t receiveFrom(void[] buf, ref Endpoint from, SocketFlags flags = SocketFlags.NONE)
+    ptrdiff_t receiveFrom(void[] buf, ref Endpoint from, SocketFlags flags = SocketFlags.none)
     {
         if (!buf.length)  //return 0 and don't think the connection closed
             return 0;
@@ -2196,7 +2196,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
 
 
     /// ditto
-    ptrdiff_t receiveFrom(void[] buf, SocketFlags flags = SocketFlags.NONE)
+    ptrdiff_t receiveFrom(void[] buf, SocketFlags flags = SocketFlags.none)
     {
         if (!buf.length)  // return 0 and don't think the connection closed
             return 0;
@@ -2332,10 +2332,10 @@ unittest
 {
     { // version 4
         auto site  = "www.digitalmars.com";
-        auto hints = new AddressInfo(AddressInfoFlags.ANY, AddressFamily.INET,
-                                     SocketType.STREAM, ProtocolType.TCP);
+        auto hints = AddressInfo(AddressInfoFlags.any, AddressFamily.inet,
+                                 SocketType.stream, ProtocolType.tcp);
 
-        if (auto addrInfo = AddressInfo.getByNode(site, "http", hints)) {
+        if (auto addrInfo = AddressInfo.getByNode(site, "http", &hints)) {
             auto addr   = addrInfo[0];
             auto socket = new Socket!IPEndpoint(addr);
 
@@ -2351,7 +2351,7 @@ unittest
             assert(result.indexOf("HTTP/1.1 200 OK") == 0);
 
             try {
-                socket.shutdown(SocketShutdown.BOTH);
+                socket.shutdown(SocketShutdown.both);
             } catch (SocketException e) {
                 // Probably Mac OS X
                 writeln(" --- IPv4 Socket.shutdown: Why return error?");
@@ -2364,10 +2364,10 @@ unittest
     { // version 6
         /* Please comment out if you enable IPv6.
         auto site  = "ipv6.goolge.com";
-        auto hints = new AddressInfo(AddressInfoFlags.ANY, AddressFamily.INET6,
-                                     SocketType.STREAM, ProtocolType.TCP);
+        auto hints = AddressInfo(AddressInfoFlags.any, AddressFamily.inet6,
+                                 SocketType.stream, ProtocolType.tcp);
 
-        if (auto addrInfo = AddressInfo.getByNode(site, "http", hints)) {
+        if (auto addrInfo = AddressInfo.getByNode(site, "http", &hints)) {
             auto addr   = addrInfo[0];
             auto socket = new Socket!IPEndpoint(addr);
 
@@ -2383,7 +2383,7 @@ unittest
             assert(result.indexOf("HTTP/1.1 200 OK") == 0);
 
             try {
-                socket.shutdown(SocketShutdown.BOTH);
+                socket.shutdown(SocketShutdown.both);
             } catch (SocketException e) {
                 // Probably Mac OS X
                 writeln(" --- IPv6 Socket.shutdown: Why return error?");
