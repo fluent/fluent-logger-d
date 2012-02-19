@@ -352,6 +352,19 @@ class AddressException : Exception
 
 
 /**
+ * Socket exceptions representing attempts to use network capabilities not
+ * available on the current system.
+ */
+class SocketFeatureException: SocketException
+{
+    this(string msg)
+    {
+        super(msg);
+    }
+}
+
+
+/**
  * AddressInfo is a class for resolving Address.
  */
 struct AddressInfo
@@ -369,71 +382,6 @@ struct AddressInfo
 
 
   public:
-    /**
-     * for hint.
-     */
-    @safe
-    this(AddressInfoFlags ai_flags = AddressInfoFlags.any, AddressFamily ai_family = AddressFamily.unspec,
-         SocketType ai_socktype = SocketType.any, ProtocolType ai_protocol = ProtocolType.any)
-    {
-        flags        = ai_flags;
-        family       = ai_family;
-        socketType   = ai_socktype;
-        protocolType = ai_protocol;
-    }
-
-
-    /// ditto
-    @safe
-    this(AddressFamily ai_family, SocketType ai_socktype = SocketType.any,
-         ProtocolType ai_protocol = ProtocolType.any, AddressInfoFlags ai_flags = AddressInfoFlags.any)
-    {
-        this(ai_flags, ai_family, ai_socktype, ai_protocol);
-    }
-
-
-    /// ditto
-    @safe
-    this(SocketType ai_socktype, ProtocolType ai_protocol = ProtocolType.any,
-         AddressInfoFlags ai_flags = AddressInfoFlags.any, AddressFamily ai_family = AddressFamily.unspec)
-    {
-        this(ai_flags, ai_family, ai_socktype, ai_protocol);
-    }
-
-
-    /// ditto
-    @safe
-    this(ProtocolType ai_protocol, AddressInfoFlags ai_flags = AddressInfoFlags.any,
-         AddressFamily ai_family = AddressFamily.unspec, SocketType ai_socktype = SocketType.any)
-    {
-        this(ai_flags, ai_family, ai_socktype, ai_protocol);
-    }
-
-
-    /**
-     * called by static methods.
-     */
-    @trusted
-    this(addrinfo* ai)
-    in
-    {
-        assert(ai, "ai is null");
-    }
-    body
-    {
-        with (*ai) {
-            family       = cast(AddressFamily)ai_family;
-            socketType   = cast(SocketType)ai_socktype;
-            protocolType = cast(ProtocolType)ai_protocol;
-            length       = ai_addrlen;
-            storage      = *cast(sockaddr_storage*)ai_addr;
-
-            if (ai_canonname)
-                canonicalName = to!string(ai_canonname);
-        }
-    }
-
-
     /**
      * Returns:
      *  the IP address associated with family.
@@ -503,93 +451,182 @@ struct AddressInfo
     }
 
 
+  private:
     /**
-     * Resolves address information.
-     *
-     * Returns:
-     *  null if unable to resolve.
+     * called by getAddressInfo.
      */
-    static AddressInfo[] getByNode(string node, string service = null, AddressInfo* hint = null)
+    @trusted
+    this(in addrinfo* ai)
     in
     {
-        assert(!(node is null && service is null));
+        assert(ai, "ai is null");
     }
     body
     {
-        /*
-         * Supports AF_UNIX
-         */
-        AddressInfo createLocalAddress(AddressInfo* info)
-        in
-        {
-            assert(node, "UNIX family requires node");
+        with (*ai) {
+            family       = cast(AddressFamily)ai_family;
+            socketType   = cast(SocketType)ai_socktype;
+            protocolType = cast(ProtocolType)ai_protocol;
+            length       = ai_addrlen;
+            storage      = *cast(sockaddr_storage*)ai_addr;
+
+            if (ai_canonname)
+                canonicalName = to!string(ai_canonname);
         }
-        body
-        {
-            auto sun  = sockaddr_un(cast(short)AddressFamily.unix);
-            auto addr = AddressInfo(AddressFamily.unix, (info.socketType == SocketType.dgram)
-                                    ? SocketType.dgram : SocketType.stream);
-
-            sun.sun_path[0..node.length]     = node;
-            sun.sun_path[node.length]        = '\0';
-            addr.length                      = sockaddr_un.sizeof;
-            *cast(sockaddr_un*)&addr.storage = sun;
-
-            return addr;
-        }
-
-        enforce(getaddrinfo_func, "Your environment can't use getaddrinfo functions");
-
-        addrinfo* res, hints;
-
-        if (hint !is null) {
-            // Local address support
-            if (hint.family == AddressFamily.unix)
-                return [createLocalAddress(hint)];
-
-            hints = cast(addrinfo*)alloca(addrinfo.sizeof);
-
-            memset(hints, 0, addrinfo.sizeof);
-
-            with (*hints) {
-                ai_flags    = cast(int)hint.flags;
-                ai_family   = cast(int)hint.family;
-                ai_socktype = cast(int)hint.socketType;
-                ai_protocol = cast(int)hint.protocolType;
-            }
-        }
-
-        if (getaddrinfo_func(node ? node.toStringz() : null, service ? service.toStringz() : null, hints, &res))
-            return null;  // gai_strerror is better?
-
-        AddressInfo[] addresses;
-
-        for (auto p = res; p; p = p.ai_next)
-            addresses ~= AddressInfo(p);
-
-        freeaddrinfo_func(res);
-
-        return addresses;
     }
+}
 
 
-    /// ditto
-    static AddressInfo[] getByService(string service, string node = null, AddressInfo* hints = null)
+/**
+ * Provides _protocol-independent translation from host names to socket
+ * addresses. If advanced functionality is not required, consider using
+ * $(D getAddress) for compatibility with older systems.
+ *
+ * Returns: Array with one $(D AddressInfo) per socket address.
+ *
+ * Throws: $(D SocketOSException) on failure, or $(D SocketFeatureException)
+ * if this functionality is not available on the current system.
+ *
+ * Params:
+ *  node     = string containing host name or numeric address
+ *  options  = optional additional parameters, identified by type:
+ *             $(UL $(LI $(D string) - service name or port number)
+ *                  $(LI $(D AddressInfoFlags) - option flags)
+ *                  $(LI $(D AddressFamily) - address family to filter by)
+ *                  $(LI $(D SocketType) - socket type to filter by)
+ *                  $(LI $(D ProtocolType) - protocol to filter by))
+ *
+ * Example:
+ * ---
+ * // Roundtrip DNS resolution
+ * auto results = getAddressInfo("www.digitalmars.com");
+ * assert(results[0].address.toHostNameString() ==
+ *     "digitalmars.com");
+ *
+ * // Canonical name
+ * results = getAddressInfo("www.digitalmars.com",
+ *     AddressInfoFlags.CANONNAME);
+ * assert(results[0].canonicalName == "digitalmars.com");
+ *
+ * // IPv6 resolution
+ * results = getAddressInfo("ipv6.google.com");
+ * assert(results[0].family == AddressFamily.INET6);
+ *
+ * // Multihomed resolution
+ * results = getAddressInfo("google.com");
+ * assert(results.length > 1);
+ *
+ * // Parsing IPv4
+ * results = getAddressInfo("127.0.0.1",
+ *     AddressInfoFlags.NUMERICHOST);
+ * assert(results.length && results[0].family ==
+ *     AddressFamily.INET);
+ *
+ * // Parsing IPv6
+ * results = getAddressInfo("::1",
+ *     AddressInfoFlags.NUMERICHOST);
+ * assert(results.length && results[0].family ==
+ *     AddressFamily.INET6);
+ * ---
+ */
+AddressInfo[] getAddressInfo(T...)(in char[] node, T options)
+{
+    const(char)[] service = null;
+    addrinfo hints;
+    hints.ai_family = AF_UNSPEC;
+
+    foreach (option; options)
     {
-        return getByService(node, service, hints);
+        static if (is(typeof(option) : const(char)[]))
+            service = option;
+        else
+        static if (is(typeof(option) == AddressInfoFlags))
+            hints.ai_flags |= option;
+        else
+        static if (is(typeof(option) == AddressFamily))
+            hints.ai_family |= option;
+        else
+        static if (is(typeof(option) == SocketType))
+            hints.ai_socktype |= option;
+        else
+        static if (is(typeof(option) == ProtocolType))
+            hints.ai_protocol |= option;
+        else
+            static assert(0, "Unknown getAddressInfo option type: " ~ typeof(option).stringof);
     }
+
+    return getAddressInfoImpl(node, service, &hints);
+}
+
+private AddressInfo[] getAddressInfoImpl(in char[] node, in char[] service, addrinfo* hints)
+{
+    AddressInfo createLocalAddress(addrinfo* info)
+    in
+    {
+        assert(node, "UNIX family requires node");
+    }
+    body
+    {
+        AddressInfo addr;
+        addr.family     = AddressFamily.unix;
+        addr.socketType = info.ai_socktype == SOCK_DGRAM ? SocketType.dgram : SocketType.stream;
+
+        auto sun = sockaddr_un(AF_UNIX);
+        sun.sun_path[0..node.length]     = node;
+        sun.sun_path[node.length]        = '\0';
+        addr.length                      = sockaddr_un.sizeof;
+        *cast(sockaddr_un*)&addr.storage = sun;
+
+        return addr;
+    }
+
+    // Local address support
+    if (hints.ai_family == AF_UNIX)
+        return [createLocalAddress(hints)];
+
+    if (getaddrinfo_func && freeaddrinfo_func)
+    {
+        addrinfo* ai_res;
+
+        int ret = getaddrinfo_func(node is null ? null : std.string.toStringz(node),
+                                   service is null ? null : std.string.toStringz(service),
+                                   hints, &ai_res);
+        scope(exit) { if (ai_res) freeaddrinfo_func(ai_res); }
+        //enforce(ret == 0, new SocketOSException("getaddrinfo error", ret, &formatGaiError));
+        if (ret != 0)
+            return null; // gai_strerror is better?
+
+        AddressInfo[] result;
+        // Use const to force UnknownAddressReference to copy the sockaddr.
+        for (const(addrinfo)* ai = ai_res; ai; ai = ai.ai_next)
+            result ~= AddressInfo(ai);
+
+        return result;
+    }
+
+    throw new SocketFeatureException("Address info lookup is not available on this system.");
 }
 
 
 unittest
 {
-    auto ais = AddressInfo.getByNode("localhost");
-    assert(ais.length, "getaddrinfo failure");
+    if (getaddrinfo_func) {
+        // Roundtrip DNS resolution
+        auto results = getAddressInfo("www.digitalmars.com");
+        assert(results[0].length > 0);
 
-    auto addrInfo = AddressInfo(AddressFamily.unix);
-    auto ai = AddressInfo.getByNode("/tmp/sock", null, &addrInfo)[0];
-    assert(ai.path       == "/tmp/sock");
-    assert(ai.socketType == SocketType.stream);
+        // Canonical name
+        results = getAddressInfo("www.digitalmars.com", AddressInfoFlags.canonName);
+        assert(results[0].canonicalName == "digitalmars.com");
+
+        // Parsing IPv4
+        results = getAddressInfo("127.0.0.1", AddressInfoFlags.numericHost);
+        assert(results.length && results[0].family == AddressFamily.inet);
+
+        // Parsing IPv6
+        results = getAddressInfo("::1", AddressInfoFlags.numericHost);
+        assert(results.length && results[0].family == AddressFamily.inet6);
+    }
 }
 
 
@@ -2351,10 +2388,8 @@ unittest
 {
     { // version 4
         auto site  = "www.digitalmars.com";
-        auto hints = AddressInfo(AddressInfoFlags.any, AddressFamily.inet,
-                                 SocketType.stream, ProtocolType.tcp);
 
-        if (auto addrInfo = AddressInfo.getByNode(site, "http", &hints)) {
+        if (auto addrInfo = getAddressInfo(site, "http", AddressInfoFlags.any, AddressFamily.inet, SocketType.stream, ProtocolType.tcp)) {
             auto addr   = addrInfo[0];
             auto socket = new Socket!IPEndpoint(addr);
 
