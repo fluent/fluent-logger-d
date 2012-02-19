@@ -31,10 +31,15 @@ In this result, Fluentd accepts ```{"text":"This is D","id":0}``` at "app.test" 
 Currently, FluentLogger is not marked as a shared.
 So, if you share a logger object accross threads, please use __gshared.
 
+## Build
+
+    % make -f posix.make
+
 ## TODO
 
 * std.log support after Phobos accepts std.log
 * Add some qualifiers (@safe, nothrow, shared, etc..)
+* Windows support
 
 ## Link
 
