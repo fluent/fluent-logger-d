@@ -41,7 +41,7 @@ import std.datetime : Clock, SysTime;
 debug import std.stdio;  // TODO: replace with std.log
 
 import msgpack;
-import socket;
+import socket;  // I don't understand std.socket API ;-(
 
 
 /**
@@ -52,8 +52,6 @@ class FluentLogger
   public:
     /**
      * FluentLogger configuration
-     *
-     * TODO: Resolve host
      */
     struct Configuration
     {
@@ -150,16 +148,15 @@ class FluentLogger
   private:
     void connect()
     {
-        auto hints = AddressInfo(AddressInfoFlags.any, AddressFamily.unspec,
-                                 SocketType.stream, ProtocolType.tcp);
-        auto addrInfo = AddressInfo.getByNode(config_.host, null, &hints);
-        if (addrInfo is null)
+        auto addrInfos = getAddressInfo(config_.host, SocketType.stream, ProtocolType.tcp);
+        if (addrInfos is null)
             throw new Exception("Failed to resolve host: hsot = " ~ config_.host);
 
         try {
-            auto addr   = addrInfo[0];
-            auto socket = new Socket!IPEndpoint(addr);
-            socket.connect(IPEndpoint(addr.ipAddress, config_.port));
+            auto addrInfo = addrInfos[0];
+            auto socket   = new Socket!IPEndpoint(addrInfo);
+
+            socket.connect(IPEndpoint(addrInfo.ipAddress, config_.port));
 
             socket_    = socket;
             errorNum_  = 0;
