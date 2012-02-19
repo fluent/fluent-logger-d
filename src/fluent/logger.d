@@ -55,6 +55,7 @@ abstract class Logger
 
 
   public:
+    @safe
     this(in string prefix)
     {
         prefix_ = prefix;
@@ -87,6 +88,7 @@ class Tester : Logger
 
 
   public:
+    @safe
     this(in string prefix)
     {
         super(prefix);
@@ -146,6 +148,7 @@ class FluentLogger : Logger
 
 
   public:
+    @safe
     this(in string prefix, in Configuration config)
     {
         super(prefix);
@@ -207,6 +210,7 @@ class FluentLogger : Logger
 
 
   private:
+    @trusted
     void connect()
     {
         auto addrInfos = getAddressInfo(config_.host, SocketType.stream, ProtocolType.tcp);
@@ -233,6 +237,7 @@ class FluentLogger : Logger
         }
     }
 
+    @trusted
     void send(in ubyte[] data)
     {
         if (socket_ is null)
@@ -242,7 +247,7 @@ class FluentLogger : Logger
 
         debug { writeln("Sent: ", data.length, " bytes"); }
     }
-
+    
     void clearSocket()
     {
         // reconnection at send method.
@@ -258,6 +263,7 @@ class FluentLogger : Logger
 
     enum ReconnectionWaitingMax = 60u;
 
+    /* @safe */ @trusted
     bool canWrite()
     {
         // prevent useless reconnection

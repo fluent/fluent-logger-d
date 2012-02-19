@@ -34,7 +34,7 @@ So, if you share a logger object accross threads, please use __gshared.
 ## TODO
 
 * std.log support after Phobos accepts std.log
-* Add other modules
+* Add some qualifiers (@safe, nothrow, shared, etc..)
 
 ## Link
 
