@@ -29,7 +29,7 @@
  *  $(LINK2 http://fluentd.org/, Welcome to Fluentd’s documentation!)
  *
  * Copyright: Copyright Masahiro Nakagawa 2012-.
- * License:   <a href="http://www.boost.org/LICENSE_1_0.txt">Boost License 1.0</a>.
+ * License:   <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.
  * Authors:   Masahiro Nakagawa
  */
 

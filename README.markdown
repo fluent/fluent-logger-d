@@ -56,6 +56,6 @@ So, if you share a logger object accross threads, please use __gshared.
     <td>Copyright</td><td>Copyright (c) 2012- Masahiro Nakagawa</td>
   </tr>
   <tr>
-    <td>License</td><td>Boost Software License, Version 1.0</td>
+    <td>License</td><td>Apache License, Version 2.0</td>
   </tr>
 </table>
