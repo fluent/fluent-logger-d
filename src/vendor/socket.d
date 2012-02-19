@@ -1679,7 +1679,7 @@ enum SocketShutdown : int
 
 version (OSX)
 {
-    enum MSG_NOSIGNAL = 0x20000;
+    private enum MSG_NOSIGNAL = 0x20000;
 }
 
 /**
@@ -1796,9 +1796,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      */
     this(AddressFamily af, SocketType type, ProtocolType protocol = ProtocolType.any)
     {
-        handle_ = cast(socket_t).socket(af, type, protocol);
-        if (handle_ == socket_t.init)
-            throw new SocketException("Unable to create socket", lastError());
+        setupHandle(cast(socket_t).socket(af, type, protocol));
         family_ = af;
     }
 
@@ -2023,7 +2021,7 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
 
         auto newSocket = accepting();
 
-        newSocket.handle_ = newsock;
+        newSocket.setupHandle(newsock);
         newSocket.family_ = family_;
         version(Windows) newSocket.blocking_ = blocking_;  //inherits blocking mode
 
@@ -2076,7 +2074,10 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      */
     long send(const(void)[] buf, SocketFlags flags = SocketFlags.none)
     {
-        flags |= SocketFlags.noSignal;
+        static if (is(typeof(MSG_NOSIGNAL)))
+        {
+            flags = cast(SocketFlags)(flags | MSG_NOSIGNAL);
+        }
 
         version(Windows)
             immutable result = .send(handle_, buf.ptr, to!int(buf.length), cast(int)flags);
@@ -2117,7 +2118,10 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
     /// ditto
     ptrdiff_t sendTo(const(void)[] buf, SocketFlags flags = SocketFlags.none)
     {
-        flags |= SocketFlags.noSignal;
+        static if (is(typeof(MSG_NOSIGNAL)))
+        {
+            flags = cast(SocketFlags)(flags | MSG_NOSIGNAL);
+        }
 
         version(Windows)
             immutable result = .sendto(handle_, buf.ptr, to!int(buf.length), cast(int)flags, null, 0);
@@ -2288,6 +2292,21 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      */
     @safe
     this() { }
+
+
+    void setupHandle(socket_t handle)
+    {
+        if (handle == socket_t.init)
+            throw new SocketException("Unable to create socket", lastError());
+        handle_ = handle;
+
+        // Set the option to disable SIGPIPE on send() if the platform
+        // has it (e.g. on OS X).
+        static if (is(typeof(SO_NOSIGPIPE)))
+        {
+            setOption(SocketOptionLevel.socket, cast(SocketOption)SO_NOSIGPIPE, true);
+        }
+    }
 
 
     /**
