@@ -7,7 +7,7 @@
  *
  * Copyright: Copyright Masahiro Nakagawa 2012-.
  * License:   <a href="http://www.boost.org/LICENSE_1_0.txt">Boost License 1.0</a>.
- * Authors:   Masahiro Nakagawa, Christopher E. Miller
+ * Authors:   Masahiro Nakagawa, Christopher E. Miller, Vladimir Panteleev
  */
 
 module socket;

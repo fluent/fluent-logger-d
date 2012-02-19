@@ -45,9 +45,81 @@ import socket;  // I don't understand std.socket API ;-(
 
 
 /**
+ * Base class for Fluent loggers
+ */
+abstract class Logger
+{
+    // should be changed to interface?
+  protected:
+    immutable string prefix_;
+
+
+  public:
+    this(in string prefix)
+    {
+        prefix_ = prefix;
+    }
+
+    @property
+    const(ubyte[]) pendings() const;
+
+    void close();
+
+    bool post(T)(in string tag, auto ref const T record)
+    {
+        return post(tag, Clock.currTime(), record);
+    }
+
+    bool post(T)(in string tag, in SysTime time, auto ref const T record)
+    {
+        auto completeTag = prefix_.length ? prefix_ ~ "." ~ tag : tag;
+        return write(pack!true(completeTag, time.toUnixTime(), record));
+    }
+
+    bool write(in ubyte[] data);
+}
+
+
+class Tester : Logger
+{
+  private:
+    ubyte[] buffer_;  // should have limit?
+
+
+  public:
+    this(in string prefix)
+    {
+        super(prefix);
+    }
+
+    @property
+    override const(ubyte[]) pendings() const
+    {
+        synchronized {
+            return buffer_;
+        }
+    }
+
+    override void close()
+    {
+        buffer_ = null;
+    }
+
+    override bool write(in ubyte[] data)
+    {
+        synchronized {
+            buffer_ ~= data;
+        }
+
+        return true;
+    }
+}
+
+
+/**
  * $(D FluentLogger) is a $(D Fluentd) client
  */
-class FluentLogger
+class FluentLogger : Logger
 {
   public:
     /**
@@ -62,7 +134,6 @@ class FluentLogger
 
 
   private:
-    immutable string        prefix_;
     immutable Configuration config_;
 
     //Appender!(ubyte[]) buffer_;  // Appender's qualifiers are broken...
@@ -77,7 +148,8 @@ class FluentLogger
   public:
     this(in string prefix, in Configuration config)
     {
-        prefix_ = prefix;
+        super(prefix);
+        //prefix_ = prefix;
         config_ = config;
     }
 
@@ -87,14 +159,14 @@ class FluentLogger
     }
 
     @property
-    const(ubyte[]) pendings() const
+    override const(ubyte[]) pendings() const
     {
         synchronized {
             return buffer_;
         }
     }
 
-    void close()
+    override void close()
     {
         synchronized {
             if (socket_ !is null) {
@@ -114,18 +186,7 @@ class FluentLogger
         }
     }
 
-    bool post(T)(in string tag, auto ref const T record)
-    {
-        return post(tag, Clock.currTime(), record);
-    }
-
-    bool post(T)(in string tag, in SysTime time, auto ref const T record)
-    {
-        auto completeTag = prefix_.length ? prefix_ ~ "." ~ tag : tag;
-        return write(pack!true(completeTag, time.toUnixTime(), record));
-    }
-
-    bool write(in ubyte[] data)
+    override bool write(in ubyte[] data)
     {
         synchronized {
             buffer_ ~= data;
