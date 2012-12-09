@@ -24,12 +24,12 @@ auto logger = new FluentLogger("app", conf);
 logger.post("test", Event());
 ```
 
-In this result, Fluentd accepts ```{"text":"This is D","id":0}``` at "app.test" input source.
+In this result, Fluentd accepts ```{"text":"This is D","id":0}``` at "app.test" tag.
 
 ### Sharing logger
 
-Currently, FluentLogger is not marked as a shared.
-So, if you share a logger object accross threads, please use __gshared.
+Currently, FluentLogger is not marked as ```shared```.
+So, if you share a logger object accross threads, please use ```__gshared```.
 
 ## Build
 
