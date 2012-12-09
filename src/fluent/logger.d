@@ -35,6 +35,7 @@
 
 module fluent.logger;
 
+import core.sync.mutex;
 import std.array;
 import std.datetime : Clock, SysTime;
 
@@ -85,6 +86,7 @@ class Tester : Logger
 {
   private:
     ubyte[] buffer_;  // should have limit?
+    Mutex mutex_;
 
 
   public:
@@ -92,12 +94,14 @@ class Tester : Logger
     this(in string prefix)
     {
         super(prefix);
+
+        mutex_ = new Mutex();
     }
 
     @property
     override const(ubyte[]) pendings() const
     {
-        synchronized {
+        synchronized(mutex_) {
             return buffer_;
         }
     }
@@ -109,7 +113,7 @@ class Tester : Logger
 
     override bool write(in ubyte[] data)
     {
-        synchronized {
+        synchronized(mutex_) {
             buffer_ ~= data;
         }
 
@@ -146,14 +150,18 @@ class FluentLogger : Logger
     uint    errorNum_;
     SysTime errorTime_;
 
+    // for multi-threading
+    Mutex mutex_;
+
 
   public:
     @safe
     this(in string prefix, in Configuration config)
     {
         super(prefix);
-        //prefix_ = prefix;
+
         config_ = config;
+        mutex_ = new Mutex();
     }
 
     ~this()
@@ -164,14 +172,14 @@ class FluentLogger : Logger
     @property
     override const(ubyte[]) pendings() const
     {
-        synchronized {
+        synchronized(mutex_) {
             return buffer_;
         }
     }
 
     override void close()
     {
-        synchronized {
+        synchronized(mutex_) {
             if (socket_ !is null) {
                 if (buffer_.length > 0) {
                     try {
@@ -191,7 +199,7 @@ class FluentLogger : Logger
 
     override bool write(in ubyte[] data)
     {
-        synchronized {
+        synchronized(mutex_) {
             buffer_ ~= data;
             if (!canWrite())
                 return false;
