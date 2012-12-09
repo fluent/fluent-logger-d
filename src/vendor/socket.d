@@ -344,9 +344,9 @@ enum AddressInfoFlags : int
 
 class AddressException : Exception
 {
-    this(string msg)
+    this(string msg, string file = __FILE__, size_t line = __LINE__)
     {
-        super(msg);
+        super(msg, file, line);
     }
 }
 
@@ -901,8 +901,8 @@ struct IPv4Address
     @trusted
     this(string addr)
     {
-        enforceEx!(AddressException)(inet_pton(AF_INET, addr.toStringz(), &address_) > 0,
-                                     "Unable to translate address '" ~ addr ~ "'");
+        enforceEx!AddressException(inet_pton(AF_INET, addr.toStringz(), &address_) > 0,
+                                   "Unable to translate address '" ~ addr ~ "'");
     }
 
 
