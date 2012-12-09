@@ -201,7 +201,7 @@ class FluentLogger : Logger
                 buffer_ = buffer_.ptr[0..0];
             } catch (SocketException e) {
                 clearSocket();
-                return false;
+                throw e;
             }
         }
 
@@ -217,23 +217,30 @@ class FluentLogger : Logger
         if (addrInfos is null)
             throw new Exception("Failed to resolve host: hsot = " ~ config_.host);
 
-        try {
-            auto addrInfo = addrInfos[0];
-            auto socket   = new Socket!IPEndpoint(addrInfo);
+        // hostname sometimes provides many address informations
+        foreach (i, ref addrInfo; addrInfos) {
+            try {
+                auto socket = new Socket!IPEndpoint(addrInfo);
 
-            socket.connect(IPEndpoint(addrInfo.ipAddress, config_.port));
+                socket.connect(IPEndpoint(addrInfo.ipAddress, config_.port));
+                socket_    = socket;
+                errorNum_  = 0;
+                errorTime_ = SysTime.init;
 
-            socket_    = socket;
-            errorNum_  = 0;
-            errorTime_ = SysTime.init;
+                debug { writeln("Connect to: host = ", config_.host, ", port = ", config_.port); }
 
-            debug { writeln("Connect to: host = ", config_.host, ", port = ", config_.port); }
-        } catch (SocketException e) {
-            clearSocket();
-            errorNum_++;
-            errorTime_ = Clock.currTime();
+                return;
+            } catch (SocketException e) {
+                clearSocket();
 
-            throw e;
+                // If all hosts can't be connected, raises an exeception
+                if (i == addrInfos.length - 1) {
+                    errorNum_++;
+                    errorTime_ = Clock.currTime();
+
+                    throw e;
+                }
+            }
         }
     }
 
