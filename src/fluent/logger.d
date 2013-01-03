@@ -229,8 +229,9 @@ class FluentLogger : Logger
         foreach (i, ref addrInfo; addrInfos) {
             try {
                 auto socket = new Socket!IPEndpoint(addrInfo);
+                auto endpoint = IPEndpoint(addrInfo.ipAddress, config_.port);
 
-                socket.connect(IPEndpoint(addrInfo.ipAddress, config_.port));
+                socket.connect(endpoint);
                 socket_    = socket;
                 errorNum_  = 0;
                 errorTime_ = SysTime.init;
