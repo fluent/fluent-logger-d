@@ -770,25 +770,41 @@ struct IPAddress
     }
 
 
-    @safe
-    bool opEquals(ref const IPAddress other) const
+    @safe const
     {
-        if (type_ != other.type_)
-            return false;
+        bool opEquals(const IPAddress other)
+        {
+            return opEquals(other);
+        }
 
-        return type_ == Type.v4 ? impl_.v4 == other.impl_.v4 : impl_.v6 == other.impl_.v6;
+
+        bool opEquals(ref const IPAddress other)
+        {
+            if (type_ != other.type_)
+                return false;
+
+            return type_ == Type.v4 ? impl_.v4 == other.impl_.v4 : impl_.v6 == other.impl_.v6;
+        }
     }
 
 
-    @safe
-    int opCmp(ref const IPAddress other) const
+    @safe const
     {
-        if (type_ < other.type_)
-            return -1;
-        else if (type_ > other.type_)
-            return 1;
-        else
-            return type_ == Type.v4 ? impl_.v4 < other.impl_.v4 : impl_.v6 < other.impl_.v6;
+        int opCmp(const IPAddress other)
+        {
+            return opCmp(other);
+        }
+
+
+        int opCmp(ref const IPAddress other)
+        {
+            if (type_ < other.type_)
+                return -1;
+            else if (type_ > other.type_)
+                return 1;
+            else
+                return type_ == Type.v4 ? impl_.v4 < other.impl_.v4 : impl_.v6 < other.impl_.v6;
+        }
     }
 
 
@@ -941,24 +957,40 @@ struct IPv4Address
     }
 
 
-    @safe
-    bool opEquals(ref const IPv4Address other) const
+    @safe const
     {
-        return address_.s_addr == other.address_.s_addr;
+        bool opEquals(const IPv4Address other)
+        {
+            return opEquals(other);
+        }
+
+
+        bool opEquals(ref const IPv4Address other)
+        {
+            return address_.s_addr == other.address_.s_addr;
+        }
     }
 
 
-    @safe
-    int opCmp(ref const IPv4Address other) const
+    @safe const
     {
-        uint a = toUInt(), b = other.toUInt();
+        int opCmp(const IPv4Address other)
+        {
+            return opCmp(other);
+        }
 
-        if (a < b)
-            return -1;
-        else if (a == b)
-            return 0;
-        else
-            return 1;
+
+        int opCmp(ref const IPv4Address other)
+        {
+            uint a = toUInt(), b = other.toUInt();
+
+            if (a < b)
+                return -1;
+            else if (a == b)
+                return 0;
+            else
+                return 1;
+        }
     }
 
 
@@ -1118,24 +1150,40 @@ struct IPv6Address
     }
 
 
-    @safe
-    bool opEquals(ref const IPv6Address other) const
+    @safe const
     {
-        return (this < other) == 0;
+        bool opEquals(const IPv6Address other)
+        {
+            return opEquals(other);
+        }
+
+
+        bool opEquals(ref const IPv6Address other)
+        {
+            return (this < other) == 0;
+        }
     }
 
 
-    @safe
-    int opCmp(ref const IPv6Address other) const
+    @safe const
     {
-        auto a = address_.s6_addr, b = other.address_.s6_addr;
+        int opCmp(const IPv6Address other)
+        {
+            return opCmp(other);
+        }
 
-        if (a < b)
-            return -1;
-        else if (a > b)
-            return 1;
-        else
-            return scopeId_ == other.scopeId_ ? 0 : scopeId_ < other.scopeId_ ? -1 : 1;
+
+        int opCmp(ref const IPv6Address other)
+        {
+            auto a = address_.s6_addr, b = other.address_.s6_addr;
+
+            if (a < b)
+                return -1;
+            else if (a > b)
+                return 1;
+            else
+                return scopeId_ == other.scopeId_ ? 0 : scopeId_ < other.scopeId_ ? -1 : 1;
+        }
     }
 
 
@@ -1222,17 +1270,33 @@ struct LocalAddress
     }
 
 
-    @trusted
-    bool opEquals(ref const LocalAddress other) const
+    @trusted const
     {
-        return path_.cmp(other.path_) == 0;
+        bool opEquals(const LocalAddress other)
+        {
+            return opEquals(other);
+        }
+
+
+        bool opEquals(ref const LocalAddress other)
+        {
+            return path_.cmp(other.path_) == 0;
+        }
     }
 
 
-    @trusted
-    int opCmp(ref const LocalAddress other) const
+    @trusted const
     {
-        return path_.cmp(other.path_);
+        int opCmp(const LocalAddress other)
+        {
+            return opCmp(other);
+        }
+
+
+        int opCmp(ref const LocalAddress other)
+        {
+            return path_.cmp(other.path_);
+        }
     }
 
 
@@ -1410,25 +1474,41 @@ struct IPEndpoint
     }
 
 
-    @safe
-    bool opEquals(ref const IPEndpoint other) const
+    @safe const
     {
-        return (this < other) == 0;
+        bool opEquals(const IPEndpoint other)
+        {
+            return opEquals(other);
+        }
+
+
+        bool opEquals(ref const IPEndpoint other)
+        {
+            return (this < other) == 0;
+        }
     }
 
 
-    @safe
-    int opCmp(ref const IPEndpoint other) const
+    @safe const
     {
-        auto lhs = address;
-        auto rhs = other.address;
+        int opCmp(const IPEndpoint other)
+        {
+            return opCmp(other);
+        }
 
-        if (lhs < rhs)
-            return -1;
-        else if (lhs > rhs)
-            return 1;
-        else
-            return port == other.port ? 0 : port < other.port ? -1 : 1;
+
+        int opCmp(ref const IPEndpoint other)
+        {
+            auto lhs = address;
+            auto rhs = other.address;
+
+            if (lhs < rhs)
+                return -1;
+            else if (lhs > rhs)
+                return 1;
+            else
+                return port == other.port ? 0 : port < other.port ? -1 : 1;
+        }
     }
 
 
@@ -1585,20 +1665,36 @@ struct LocalEndpoint
     }
 
 
-    @safe
-    bool opEquals(ref const LocalEndpoint other) const
+    @safe const
     {
-        return (this < other) == 0;
+        bool opEquals(const LocalEndpoint other)
+        {
+            return opEquals(other);
+        }
+
+
+        bool opEquals(ref const LocalEndpoint other)
+        {
+            return (this < other) == 0;
+        }
     }
 
 
-    @trusted
-    int opCmp(ref const LocalEndpoint other) const
+    @trusted const
     {
-        auto lhs = sa_.unix.sun_path[0..sa_.unix.sun_path.indexOf('\0')];
-        auto rhs = other.sa_.unix.sun_path[0..other.sa_.unix.sun_path.indexOf('\0')];
+        int opCmp(const LocalEndpoint other)
+        {
+            return opCmp(other);
+        }
 
-        return lhs.cmp(rhs);
+
+        int opCmp(ref const LocalEndpoint other)
+        {
+            auto lhs = sa_.unix.sun_path[0..sa_.unix.sun_path.indexOf('\0')];
+            auto rhs = other.sa_.unix.sun_path[0..other.sa_.unix.sun_path.indexOf('\0')];
+
+            return lhs.cmp(rhs);
+        }
     }
 
 
@@ -1984,6 +2080,13 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
     /**
      * Associates a local address with this socket.
      */
+    void bind(const Endpoint addr)
+    {
+        return bind(addr);
+    }
+
+
+    /// ditto
     void bind(ref const Endpoint addr)
     {
         version(Windows)  // std.c.windows.winsock(original bind apply const) must go!
@@ -2001,6 +2104,13 @@ class Socket(Endpoint) if (isEndpoint!Endpoint)
      * the connection to be made. If the socket is nonblocking, connect
      * returns immediately and the connection attempt is still in progress.
      */
+    void connect(const Endpoint addr)
+    {
+        return connect(addr);
+    }
+
+
+    /// ditto
     void connect(ref const Endpoint addr)
     {
         version(Windows)  // std.c.windows.winsock(original connect apply const) must go!
