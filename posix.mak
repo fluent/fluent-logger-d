@@ -1,19 +1,14 @@
 # build mode: 32bit or 64bit
-ifeq (,$(MODEL))
-	MODEL := 32
-endif
+MODEL ?= $(shell getconf LONG_BIT)
+DMD ?= dmd
 
-ifeq (,$(DMD))
-	DMD := dmd
-endif
-
-LIB     = libfluentlogger.a
-DFLAGS  = -Isrc -m$(MODEL) -w -d -property
+LIB    = libfluentlogger.a
+DFLAGS = -Isrc -m$(MODEL) -w -d -property
 
 ifeq ($(BUILD),debug)
 	DFLAGS += -g -debug
 else
-	DFLAGS += -O -release -nofloat -inline
+	DFLAGS += -O -release -nofloat -inline -noboundscheck
 endif
 
 NAMES   = fluent/logger
@@ -27,7 +22,7 @@ DOCDIR    = html
 CANDYDOC  = $(addprefix html/candydoc/, candy.ddoc modules.ddoc)
 DDOCFLAGS = -Dd$(DOCDIR) -c -o- -Isrc $(CANDYDOC)
 
-target: doc $(LIB)
+target: $(LIB)
 
 $(LIB):
 	$(DMD) $(DFLAGS) -lib -of$(LIB) $(SRCS)
@@ -38,7 +33,7 @@ doc:
 clean:
 	rm $(addprefix $(DOCDIR)/, $(DOCS)) $(LIB)
 
-MAIN_FILE = "empty_msgpack_unittest.d"
+MAIN_FILE = "empty_fluent_logger_unittest.d"
 
 unittest:
 	echo 'import fluent.logger; void main(){}' > $(MAIN_FILE)
