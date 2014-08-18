@@ -42,7 +42,7 @@ import std.datetime : Clock, SysTime;
 debug import std.stdio;  // TODO: replace with std.log
 
 import msgpack;
-import socket;  // I don't understand std.socket API ;-(
+import vendor.socket;  // I don't understand std.socket API ;-(
 
 
 /**
@@ -90,7 +90,7 @@ class Tester : Logger
 
 
   public:
-    @safe
+    @trusted
     this(in string prefix)
     {
         super(prefix);
@@ -155,7 +155,7 @@ class FluentLogger : Logger
 
 
   public:
-    @safe
+    @trusted
     this(in string prefix, in Configuration config)
     {
         super(prefix);

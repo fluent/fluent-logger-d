@@ -10,7 +10,7 @@
  * Authors:   Masahiro Nakagawa, Christopher E. Miller, Vladimir Panteleev
  */
 
-module socket;
+module vendor.socket;
 
 import core.memory;       // GC
 import core.time;         // Duration
@@ -344,6 +344,7 @@ enum AddressInfoFlags : int
 
 class AddressException : Exception
 {
+    @trusted
     this(string msg, string file = __FILE__, size_t line = __LINE__)
     {
         super(msg, file, line);
