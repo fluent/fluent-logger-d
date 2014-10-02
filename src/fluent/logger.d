@@ -23,6 +23,9 @@
  * // Write Event object with "test" tag to Fluentd 
  * logger.post("test", Event());
  * // Fluentd accepts {"text":"This is D","id":0} at "app.test" input
+ * 
+ * // Disconnect and perform cleanup
+ * logger.close(); // Or destroy(logger);
  * -----
  *
  * See_Also:
@@ -35,15 +38,15 @@
 
 module fluent.logger;
 
-import core.sync.mutex;
-import std.array;
-import std.datetime : Clock, SysTime;
+private import core.sync.mutex;
+private import std.array;
+private import std.datetime : Clock, SysTime;
+private import std.socket : getAddress, lastSocketError, ProtocolType, Socket,
+                            SocketException, SocketShutdown, SocketType, TcpSocket;
 
 debug import std.stdio;  // TODO: replace with std.log
 
-import msgpack;
-import vendor.socket;  // I don't understand std.socket API ;-(
-
+private import msgpack;
 
 /**
  * Base class for Fluent loggers
@@ -144,7 +147,7 @@ class FluentLogger : Logger
 
     //Appender!(ubyte[]) buffer_;  // Appender's qualifiers are broken...
     ubyte[]            buffer_;  // should have limit?
-    Socket!IPEndpoint  socket_;
+    TcpSocket  socket_;
 
     // for reconnection
     uint    errorNum_;
@@ -186,12 +189,12 @@ class FluentLogger : Logger
                         send(buffer_);
                         buffer_ = null;
                     } catch (const SocketException e) {
-                        debug { writeln("Failed to flush logs"); }
+                        debug { writeln("Failed to flush logs. ", buffer_.length, " bytes not sent."); }
                     }
                 }
 
-                socket_.shutdown(SocketShutdown.both);
-                clear(socket_);
+                socket_.shutdown(SocketShutdown.BOTH);
+                socket_.close();
                 socket_ = null;
             }
         }
@@ -221,29 +224,26 @@ class FluentLogger : Logger
     @trusted
     void connect()
     {
-        auto addrInfos = getAddressInfo(config_.host, SocketType.stream, ProtocolType.tcp);
-        if (addrInfos is null)
-            throw new Exception("Failed to resolve host: hsot = " ~ config_.host);
+        auto addresses = getAddress(config_.host, config_.port);
+        if (addresses.length == 0)
+            throw new Exception("Failed to resolve host: host = " ~ config_.host);
 
         // hostname sometimes provides many address informations
-        foreach (i, ref addrInfo; addrInfos) {
+		foreach (i, ref address; addresses) {
             try {
-                auto socket = new Socket!IPEndpoint(addrInfo);
-                auto endpoint = IPEndpoint(addrInfo.ipAddress, config_.port);
-
-                socket.connect(endpoint);
-                socket_    = socket;
+                auto socket = new TcpSocket(address);
+				socket_    = socket;
                 errorNum_  = 0;
                 errorTime_ = SysTime.init;
 
-                debug { writeln("Connect to: host = ", config_.host, ", port = ", config_.port); }
+                debug { writeln("Connected to: host = ", config_.host, ", port = ", config_.port); }
 
                 return;
             } catch (SocketException e) {
                 clearSocket();
 
                 // If all hosts can't be connected, raises an exeception
-                if (i == addrInfos.length - 1) {
+                if (i == addresses.length - 1) {
                     errorNum_++;
                     errorTime_ = Clock.currTime();
 
@@ -259,7 +259,11 @@ class FluentLogger : Logger
         if (socket_ is null)
             connect();
 
-        socket_.send(data);
+        auto bytesSent = socket_.send(data);
+        if(bytesSent == Socket.ERROR)
+        {
+            throw new SocketException("Unable to send to socket. ", lastSocketError());
+        }
 
         debug { writeln("Sent: ", data.length, " bytes"); }
     }
@@ -289,7 +293,7 @@ class FluentLogger : Logger
             if (secs > ReconnectionWaitingMax)
                 secs = ReconnectionWaitingMax;
 
-            if ((Clock.currTime() - errorTime_).get!"seconds"() < secs)
+            if ((Clock.currTime() - errorTime_).total!"seconds"() < secs)
                 return false;
         }
 

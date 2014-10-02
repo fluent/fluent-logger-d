@@ -1,0 +1,32 @@
+﻿{
+	"name" : "fluent-logger-d",
+	"description" : "A structured logger for (D).",
+	"authors" : ["Masahiro Nakagawa"],
+	"license" : "Apache-2.0",
+	"targetPath": "bin",
+	"dependencies": {
+		"msgpack-d": "~>0.9.1"
+	},
+
+	"configurations": [
+		{
+			"name": "library",
+			"targetName": "fluent-logger",
+			"targetType": "library",
+		},
+		{	
+			"name": "post-example",
+			"targetType": "executable",
+			"targetName": "post",
+			"sourceFiles": ["example/post.d"],
+			"mainSourceFile": "example/post.d"
+		},
+		{	
+			"name": "post-mt-example",
+			"targetType": "executable",
+			"targetName": "post_mt",
+			"sourceFiles": ["example/post_mt.d"],
+			"mainSourceFile": "example/post_mt.d"
+		}
+   	],
+}
