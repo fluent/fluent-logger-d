@@ -1,13 +1,15 @@
 ﻿{
-	"name" : "fluent-logger-d",
-	"description" : "A structured logger for (D).",
+	"name" : "fluent-logger",
+	"description" : "A structured logger for Fluentd.",
 	"authors" : ["Masahiro Nakagawa"],
-	"license" : "Apache-2.0",
+	"homepage":    "https://github.com/fluent/fluent-logger-d",
+	"license":     "Apache License, Version 2.0",
+	"copyright":   "Copyright (c) 2012- Masahiro Nakagawa",
+	"importPaths": ["src"],
 	"targetPath": "bin",
 	"dependencies": {
 		"msgpack-d": "~>0.9.1"
 	},
-
 	"configurations": [
 		{
 			"name": "library",
