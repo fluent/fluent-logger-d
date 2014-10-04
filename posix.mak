@@ -12,8 +12,7 @@ else
 endif
 
 NAMES   = fluent/logger
-VENDORS = vendor/msgpack vendor/socket
-FILES   = $(addsuffix .d, $(NAMES) $(VENDORS))
+FILES   = $(addsuffix .d, $(NAMES))
 SRCS    = $(addprefix src/, $(FILES))
 
 # DDoc

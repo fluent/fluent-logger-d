@@ -22,6 +22,6 @@ void main()
         Thread.sleep(dur!("msecs")(10));
     }
 
-    clear(logger);
+    destroy(logger);
     writeln("End");
 }
