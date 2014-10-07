@@ -1,0 +1,34 @@
+﻿{
+	"name": "fluent-logger",
+	"description": "A structured logger for Fluentd.",
+	"authors":     ["Masahiro Nakagawa"],
+	"homepage":    "https://github.com/fluent/fluent-logger-d",
+	"license":     "Apache License, Version 2.0",
+	"copyright":   "Copyright (c) 2012- Masahiro Nakagawa",
+	"importPaths": ["src"],
+	"targetPath":  "bin",
+	"dependencies": {
+		"msgpack-d": "~>0.9.1"
+	},
+	"configurations": [
+		{
+			"name": "library",
+			"targetName": "fluent-logger",
+			"targetType": "library",
+		},
+		{	
+			"name": "post-example",
+			"targetType": "executable",
+			"targetName": "post",
+			"sourceFiles": ["example/post.d"],
+			"mainSourceFile": "example/post.d"
+		},
+		{	
+			"name": "post-mt-example",
+			"targetType": "executable",
+			"targetName": "post_mt",
+			"sourceFiles": ["example/post_mt.d"],
+			"mainSourceFile": "example/post_mt.d"
+		}
+   	],
+}
