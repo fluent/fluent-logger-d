@@ -229,10 +229,10 @@ class FluentLogger : Logger
             throw new Exception("Failed to resolve host: host = " ~ config_.host);
 
         // hostname sometimes provides many address informations
-		foreach (i, ref address; addresses) {
+        foreach (i, ref address; addresses) {
             try {
                 auto socket = new TcpSocket(address);
-				socket_    = socket;
+                socket_    = socket;
                 errorNum_  = 0;
                 errorTime_ = SysTime.init;
 
@@ -260,8 +260,7 @@ class FluentLogger : Logger
             connect();
 
         auto bytesSent = socket_.send(data);
-        if(bytesSent == Socket.ERROR)
-        {
+        if (bytesSent == Socket.ERROR) {
             throw new SocketException("Unable to send to socket. ", lastSocketError());
         }
 
