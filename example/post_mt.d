@@ -32,6 +32,6 @@ void main()
         group.create(&worker);
     group.joinAll();
 
-    clear(logger);
+    destroy(logger);
     writeln("End");
 }

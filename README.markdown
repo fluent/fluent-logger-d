@@ -22,6 +22,9 @@ auto logger = new FluentLogger("app", conf);
 
 // Write Event object with "test" tag to Fluentd 
 logger.post("test", Event());
+
+// Disconnect and perform cleanup
+logger.close(); // Or destroy(logger);
 ```
 
 In this result, Fluentd accepts ```{"text":"This is D","id":0}``` at "app.test" tag.
@@ -33,7 +36,11 @@ So, if you share a logger object accross threads, please use ```__gshared```.
 
 ## Build
 
-    % make -f posix.make
+    The library: dub build
+    Documentation: dub build --build=docs
+    Examples:
+       Single-threaded: dub build --config=post-example
+       Multi-threaded: dub build --config=post-mt-example
 
 ## TODO
 
