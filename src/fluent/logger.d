@@ -173,7 +173,7 @@ class FluentLogger : Logger
         config_ = config;
         mutex_ = new Mutex();
 
-        ubyte tmpBuf[] = new ubyte[config.initialBufferSize];
+        ubyte[] tmpBuf = new ubyte[config.initialBufferSize];
         buffer_ = dataBuffer(tmpBuf);
     }
 
