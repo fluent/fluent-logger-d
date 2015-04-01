@@ -70,17 +70,72 @@ abstract class Logger
 
     void close();
 
+    /**
+     * Pack the given $(D_PARAM record) using MessagePack and
+     * write it with the current timestamp using $(D_PSYMBOL write).
+     *
+     * If a prefix was given when the logger was created the
+     * tag is appended to the prefix when posting. This
+     * allocation may be avoided by given a $(D_KEYWORD null)
+     * prefix in the constructor and the full tag here.
+     *
+     * Params:
+     *  tag = string used to tag the record
+     *  record = data to be packed via msgpack and sent
+     *
+     * Returns: True if the data was successfully sent
+     *          to the fluent server. False if the data
+     *          was queued for sending later but no
+     *          attempt was made to send to the remote
+     *          host because of a previous error.
+     * See_Also: write
+     */
     bool post(T)(in string tag, auto ref const T record)
     {
         return post(tag, Clock.currTime(), record);
     }
 
+    /**
+     * Pack the given $(D_PARAM record) using MessagePack and
+     * write it with the given timestamp using $(D_PSYMBOL write).
+     *
+     * If a prefix was given when the logger was created the
+     * tag is appended to the prefix when posting. This
+     * allocation may be avoided by giving a $(D_KEYWORD null)
+     * prefix in the constructor and the full tag here.
+     *
+     * Params:
+     *  tag = string used to tag the record
+     *  time = timestamp of the event being logged
+     *  record = data to be packed via msgpack and sent
+     *
+     * Returns: True if the data was successfully sent
+     *          to the fluent server. False if the data
+     *          was queued for sending later but no
+     *          attempt was made to send to the remote
+     *          host because of a previous error.
+     * See_Also: write
+     */
     bool post(T)(in string tag, in SysTime time, auto ref const T record)
     {
         auto completeTag = prefix_.length ? prefix_ ~ "." ~ tag : tag;
         return write(pack!true(completeTag, time.toUnixTime(), record));
     }
 
+    /**
+     * Write an array of ubyte to the logger.
+     * Client code should generally use the post() functions
+     * of $(D_PSYMBOL Logger) instead of calling write() directly.
+     *
+     * Params:
+     *   data = The data to be written.
+     * Returns: True if the data was successfully sent
+     *          to the fluent host. False if the data
+     *          was queued for sending later but no
+     *          attempt was made to send to the remote
+     *          host because of a previous error.
+     * See_Also: post
+     */
     bool write(in ubyte[] data);
 }
 
@@ -126,7 +181,7 @@ class Tester : Logger
 
 
 /**
- * $(D FluentLogger) is a $(D Fluentd) client
+ * $(D_PSYMBOL FluentLogger) is a $(D_PSYMBOL Fluentd) client
  */
 class FluentLogger : Logger
 {
