@@ -42,6 +42,13 @@ So, if you share a logger object accross threads, please use ```__gshared```.
        Single-threaded: dub build --config=post-example
        Multi-threaded: dub build --config=post-mt-example
 
+## Debug logging:
+
+    Limited logging to stdout can be enabled by adding FluentLogger to debugVersions in your project's dub.json:
+```
+"debugVersions": ["FluentLogger"],
+```
+
 ## TODO
 
 * std.log support after Phobos accepts std.log
