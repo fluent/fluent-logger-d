@@ -44,7 +44,7 @@ private import std.datetime : Clock, SysTime;
 private import std.socket : getAddress, lastSocketError, ProtocolType, Socket,
                             SocketException, SocketShutdown, SocketType, TcpSocket;
 
-debug import std.stdio;  // TODO: replace with std.log
+debug(FluentLogger) import std.stdio;  // TODO: replace with std.log
 
 private import msgpack;
 
@@ -223,7 +223,7 @@ class FluentLogger : Logger
                         send(buffer_[]);
                         buffer_.length = 0;
                     } catch (const SocketException e) {
-                        debug { writeln("Failed to flush logs. ", buffer_.length, " bytes not sent."); }
+                        debug(FluentLogger) { writeln("FluentLogger: Failed to flush logs. ", buffer_.length, " bytes not sent."); }
                     }
                 }
 
@@ -293,7 +293,7 @@ class FluentLogger : Logger
                 errorNum_  = 0;
                 errorTime_ = SysTime.init;
 
-                debug { writeln("Connected to: host = ", config_.host, ", port = ", config_.port); }
+                debug(FluentLogger) { writeln("FluentLogger: Connected to: host = ", config_.host, ", port = ", config_.port); }
 
                 return;
             } catch (SocketException e) {
@@ -336,7 +336,7 @@ class FluentLogger : Logger
             throw new SocketException("Unable to send to socket. ", lastSocketError());
         }
 
-        debug { writeln("Sent: ", data.length, " bytes"); }
+        debug(FluentLogger) { writeln("FluentLogger: Sent ", data.length, " bytes"); }
     }
     
     /**
